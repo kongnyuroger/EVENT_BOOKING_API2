@@ -129,8 +129,8 @@ POST /register
 
 ```json
 {
-  "username": "johndoe",
-  "email": "john@example.com",
+  "username": "doe",
+  "email": "doe@example.com",
   "password": "securepassword123"
 }
 ```
@@ -142,8 +142,8 @@ POST /register
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": 1,
-    "username": "johndoe",
-    "email": "john@example.com"
+    "username": "doe",
+    "email": "deo@example.com"
   }
 }
 ```
