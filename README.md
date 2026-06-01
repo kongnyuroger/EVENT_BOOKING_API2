@@ -36,6 +36,7 @@ cd event-b-api
 ```bash
 npm install
 ```
+## author roger
 
 ### 3. Configure environment variables
 
