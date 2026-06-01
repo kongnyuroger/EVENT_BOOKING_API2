@@ -1,29 +1,37 @@
-const pool = require('../config/db');
+const crypto = require('crypto');
 
-async function findByEmail(email) {
-  const { rows } = await pool.query(
-    'SELECT * FROM users WHERE email = $1',
-    [email]
-  );
-  return rows[0] || null;
+const ITERATIONS = 100_000;
+const KEY_LENGTH = 64;
+const DIGEST    = 'sha512';
+
+/**
+ * Hash a plain-text password.
+ * Returns a string in the format:  salt:hash  (both hex-encoded)
+ */
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto
+    .pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, DIGEST)
+    .toString('hex');
+  return `${salt}:${hash}`;
 }
 
-async function findById(id) {
-  const { rows } = await pool.query(
-    'SELECT id, username, email, created_at FROM users WHERE id = $1',
-    [id]
+/**
+ * Compare a plain-text password against a stored hash string.
+ * @param {string} password   - the raw password to verify
+ * @param {string} storedHash - the "salt:hash" string from the DB
+ */
+function verifyPassword(password, storedHash) {
+  const [salt, originalHash] = storedHash.split(':');
+  const hash = crypto
+    .pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, DIGEST)
+    .toString('hex');
+  // Constant-time comparison to prevent timing attacks
+  return crypto.timingSafeEqual(
+    Buffer.from(hash, 'hex'),
+    Buffer.from(originalHash, 'hex')
   );
-  return rows[0] || null;
 }
 
-async function createUser({ username, email, passwordHash }) {
-  const { rows } = await pool.query(
-    `INSERT INTO users (username, email, password_hash)
-     VALUES ($1, $2, $3)
-     RETURNING id, username, email, created_at`,
-    [username, email, passwordHash]
-  );
-  return rows[0];
-}
+module.exports = { hashPassword, verifyPassword };
 
-module.exports = { findByEmail, findById, createUser };
